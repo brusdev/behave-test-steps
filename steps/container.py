@@ -30,6 +30,7 @@ import re
 import tarfile
 import tempfile
 import time
+import traceback
 
 try:
     d = docker.Client(version="1.22")
@@ -90,7 +91,8 @@ class Container(object):
     def start(self, **kwargs):
         """ Starts a detached container for selected image """
         self._create_container(**kwargs)
-        self.logging.debug("Starting container '%s'..." % self.container.get('Id'))
+        self.logging.info("Starting container '%s'..." % self.container.get('Id'))
+        self.logging.info('ST:'.join(traceback.format_stack()))
         d.start(container=self.container)
         self.running = True
         self.ip_address = self.inspect()['NetworkSettings']['IPAddress']
@@ -98,7 +100,7 @@ class Container(object):
     def _remove_container(self, number=1):
         self.logging.info("Removing container '%s', %s try..." % (self.container['Id'], number))
         try:
-            d.remove_container(self.container)
+            #d.remove_container(self.container)
             self.logging.info("Container '%s' removed", self.container['Id'])
         except:
             self.logging.info("Removing container '%s' failed" % self.container['Id'])
@@ -129,9 +131,11 @@ class Container(object):
                 print(d.logs(container=self.container.get('Id'), stream=False), file=f)
 
         if self.container:
-            self.logging.debug("Removing container '%s'" % self.container['Id'])
+            self.logging.info("Removing container '%s'" % self.container['Id'])
             # Kill only running container
             if self.inspect()['State']['Running']:
+                #logs = self.container.get_output().decode()
+                self.logging.info('test')
                 d.kill(container=self.container)
             self.running = False
             self._remove_container()
